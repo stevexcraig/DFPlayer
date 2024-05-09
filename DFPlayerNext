@@ -1,0 +1,59 @@
+#include <SoftwareSerial.h>
+#include <DFRobotDFPlayerMini.h>
+
+// Define the pins for the DFPlayer and buttons
+const int RX_PIN = 10;
+const int TX_PIN = 11;
+const int NEXT_BUTTON_PIN = 2;
+const int PREV_BUTTON_PIN = 3;
+
+// Create a DFPlayer object
+SoftwareSerial dfPlayerSerial(RX_PIN, TX_PIN);
+DFRobotDFPlayerMini dfPlayer;
+
+bool isPlaying = false; // Flag to track if a track is playing
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+
+  // Initialize the DFPlayer module
+  dfPlayerSerial.begin(9600);
+  dfPlayer.begin(dfPlayerSerial);
+
+  // Set the volume (0-30)
+  dfPlayer.volume(15);
+
+  // Set the buttons as inputs with internal pull-up resistors
+  pinMode(NEXT_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(PREV_BUTTON_PIN, INPUT_PULLUP);
+}
+
+void loop() {
+  // Check if the next button is pressed
+  if (digitalRead(NEXT_BUTTON_PIN) == LOW) {
+    // Play the next track
+    dfPlayer.next();
+    isPlaying = true;
+    delay(500); // Debounce delay
+  }
+
+  // Check if the previous button is pressed
+  if (digitalRead(PREV_BUTTON_PIN) == LOW) {
+    // Play the previous track
+    dfPlayer.previous();
+    isPlaying = true;
+    delay(500); // Debounce delay
+  }
+
+  // Check if a track is currently playing
+  if (isPlaying && !dfPlayer.available()) {
+    // Track has finished playing
+    isPlaying = false;
+    dfPlayer.stop();
+  } else if (!isPlaying) {
+    // No track is playing, start playing the first track
+    dfPlayer.play(1);
+    isPlaying = true;
+  }
+}
